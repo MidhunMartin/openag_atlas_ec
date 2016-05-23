@@ -1,39 +1,43 @@
-/** 
+/**
  *  \file openag_atlas_ec.h
  *  \brief Electrical conductivity sensor.
  */
 #ifndef OPENAG_ATLAS_EC_H
 #define OPENAG_ATLAS_EC_H
 
-#if ARDUINO >= 100
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
+#include "Arduino.h"
 #include <Wire.h>
+#include <openag_peripheral.h>
 
 /**
  * \brief Electrical conductivity sensor.
  */
-class AtlasEc {
-  public:
-  // Public Functions
-  AtlasEc(String electrical_conductivity_id, int electrical_conductivity_channel);
-  void begin(void);
-  String get(String id);
-  String set(String id, String value);
+ class AtlasEc : public Peripheral {
+   public:
+     // Public variables
+     String id;
+     float electrical_conductivity;
 
-  // Public Variables
-  float electrical_conductivity;
-    
-  private:
-  // Private Functions
-  float getElectricalConductivity(void);
-    
-  // Private Variables
-  String _electrical_conductivity_id;
-  int _electrical_conductivity_channel;
-};
+     // Public functions
+     AtlasEc(String id, String* parameters); // constructor
+     ~AtlasEc(); // destructor
+     void begin(void);
+     String get(String key);
+     String set(String key, String value);
 
-#endif
+   private:
+     // Private variables
+     String _electrical_conductivity_message;
+     uint32_t _time_of_last_reading;
+     const static uint32_t _min_update_interval = 0;
+     String _electrical_conductivity_key;
+     int _electrical_conductivity_channel;
+
+     // Private functions
+     void getData();
+     String getElectricalConductvity();
+     String getMessage(String key, String value);
+     String getErrorMessage(String key);
+ };
+
+ #endif

@@ -1,64 +1,84 @@
-/** 
+/**
  *  \file openag_atlas_ec.cpp
  *  \brief Electrical conductivity sensor.
  */
 #include "openag_atlas_ec.h"
 
-AtlasEc::AtlasEc(String electrical_conductivity_id, int electrical_conductivity_channel) {
-  _electrical_conductivity_id = electrical_conductivity_id;
-  _electrical_conductivity_channel = electrical_conductivity_channel;
+AtlasEc::AtlasEc(String id, String* parameters) : Peripheral(id, parameters){
+  this->id = id;
+  _electrical_conductivity_key = "electrical_conductivity";
+  _electrical_conductivity_channel = parameters[0].toInt();
 }
 
+AtlasEc::~AtlasEc() {}
 
-void AtlasEc::begin(void) {
+void AtlasEc::begin() {
   Wire.begin();
+  _time_of_last_reading = 0;
 }
 
-
-String AtlasEc::get(String id) {
-  String message = "";
-  if (id == _electrical_conductivity_id) {
-    electrical_conductivity = getElectricalConductivity() / 1000;
-    message = id + ":" + String(electrical_conductivity, 2);
+String AtlasEc::get(String key) {
+  if (key == String(_electrical_conductivity_key)) {
+    return getElectricalConductvity();
   }
-  return message;
 }
 
-String AtlasEc::set(String id, String value) {
-  return "";
-}
-
-
-float AtlasEc::getElectricalConductivity(void) {
-  char sensor_data[30];
-  byte sensor_bytes_received = 0;
-  byte code = 0;
-  byte in_char = 0;
-  
-  Wire.beginTransmission(_electrical_conductivity_channel);     // call the circuit by its ID number.
-  Wire.write('r');                          // request a reading by sending 'r'
-  Wire.endTransmission();                         // end the I2C data transmission.
-
-  delay(1000);  // AS circuits need a 1 second before the reading is ready
-  
-  sensor_bytes_received = 0;                        // reset data counter
-  memset(sensor_data, 0, sizeof(sensor_data));        // clear sensordata array;
-
-  Wire.requestFrom(_electrical_conductivity_channel, 48, 1);    // call the circuit and request 48 bytes (this is more then we need).
-  code = Wire.read();
-
-  while (Wire.available()) {          // are there bytes to receive?
-    in_char = Wire.read();            // receive a byte.
-  
-    if (in_char == 0) {               // null character indicates end of command
-      Wire.endTransmission();         // end the I2C data transmission.
-      break;                          // exit the while loop, we're done here
-    }
-    else {
-      sensor_data[sensor_bytes_received] = in_char;      // append this byte to the sensor data array.
-      sensor_bytes_received++;
-    }
+String AtlasEc::set(String key, String value) {
+  if (key == String(_electrical_conductivity_key)) {
+    return getErrorMessage(_electrical_conductivity_key);
   }
-  return atof(sensor_data);
 }
 
+String AtlasEc::getElectricalConductvity(){
+  if (millis() - _time_of_last_reading > _min_update_interval){ // can only read sensor so often
+    getData();
+    _time_of_last_reading = millis();
+  }
+  return _electrical_conductivity_message;
+}
+
+void AtlasEc::getData() {
+  boolean is_good_reading = true;
+
+  // Read sensor
+  Wire.beginTransmission(_electrical_conductivity_channel); // read message response state
+  Wire.print("r");
+  Wire.endTransmission();
+  delay(1000);
+  Wire.requestFrom(_electrical_conductivity_channel, 20, 1);
+  byte response = Wire.read();
+  String string = Wire.readStringUntil(0);
+
+  // Check for failure
+  if (response == 255) {
+    is_good_reading = false; // no data
+  }
+  else if (response == 254) {
+    is_good_reading = false; // request pending
+  }
+  else if (response == 2) {
+    is_good_reading = false; // request failed
+  }
+  else if (response == 1) { // good reading
+    electrical_conductivity = string.toFloat() / 1000;
+  }
+  else {
+    is_good_reading = false; // unknown error
+  }
+
+  // Update messages
+  if (is_good_reading) {
+    _electrical_conductivity_message = getMessage(_electrical_conductivity_key, String(electrical_conductivity, 1));
+  }
+  else { // read failure
+    _electrical_conductivity_message = getErrorMessage(_electrical_conductivity_key);
+  }
+}
+
+String AtlasEc::getMessage(String key, String value) {
+  return String(id + "," + key + "," + value);
+}
+
+String AtlasEc::getErrorMessage(String key) {
+  return String(id + "," + key + ",error");
+}
