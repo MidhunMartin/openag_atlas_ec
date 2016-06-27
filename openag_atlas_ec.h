@@ -7,37 +7,36 @@
 
 #include "Arduino.h"
 #include <Wire.h>
-#include <openag_peripheral.h>
+#include <std_msgs/Float32.h>
 
 /**
  * \brief Electrical conductivity sensor.
  */
- class AtlasEc : public Peripheral {
-   public:
-     // Public variables
-     String id;
-     float electrical_conductivity;
+class AtlasEc {
+  public:
+    // Constructor
+    AtlasEc(int i2c_address);
 
-     // Public functions
-     AtlasEc(String id, String* parameters); // constructor
-     ~AtlasEc(); // destructor
-     void begin(void);
-     String get(String key);
-     String set(String key, String value);
+    // Public variables
+    bool has_error;
+    char* error_msg;
 
-   private:
-     // Private variables
-     String _electrical_conductivity_message;
-     uint32_t _time_of_last_reading;
-     const static uint32_t _min_update_interval = 0;
-     String _electrical_conductivity_key;
-     int _electrical_conductivity_channel;
+    // Public functions
+    void begin();
+    bool get_electrical_conductivity(std_msgs::Float32 &msg);
 
-     // Private functions
-     void getData();
-     String getElectricalConductvity();
-     String getMessage(String key, String value);
-     String getErrorMessage(String key);
- };
+  private:
+    // Private variables
+    float _electrical_conductivity;
+    uint32_t _time_of_last_reading;
+    uint32_t _time_of_last_query;
+    bool _waiting_for_response;
+    const static uint32_t _min_update_interval = 2000;
+    int _i2c_address;
+
+    // Private functions
+    void send_query();
+    bool read_response();
+};
 
  #endif

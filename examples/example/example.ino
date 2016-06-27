@@ -1,13 +1,22 @@
 #include "openag_atlas_ec.h"
-String parameters[] = {"100"};
-AtlasEc atlas_ec_1("atlas_ec_1", parameters);
+
+AtlasEc atlas_ec_1(100);
 
 void setup() {
   Serial.begin(9600);
   atlas_ec_1.begin();
 }
 
+std_msgs::Float32 ec_msg;
+
 void loop() {
-  Serial.println(atlas_ec_1.get("electrical_conductivity"));
-  delay(1000);
+  if (atlas_ec_1.get_electrical_conductivity(ec_msg)) {
+    Serial.print("Electrical Conductivity: ");
+    Serial.println(ec_msg.data);
+  }
+  if (atlas_ec_1.has_error) {
+    Serial.print("Error: ");
+    Serial.println(atlas_ec_1.error_msg);
+    atlas_ec_1.has_error = false;
+  }
 }

@@ -4,81 +4,68 @@
  */
 #include "openag_atlas_ec.h"
 
-AtlasEc::AtlasEc(String id, String* parameters) : Peripheral(id, parameters){
-  this->id = id;
-  _electrical_conductivity_key = "electrical_conductivity";
-  _electrical_conductivity_channel = parameters[0].toInt();
+AtlasEc::AtlasEc(int i2c_address) {
+  _i2c_address = i2c_address;
 }
-
-AtlasEc::~AtlasEc() {}
 
 void AtlasEc::begin() {
   Wire.begin();
   _time_of_last_reading = 0;
+  _time_of_last_query = 0;
+  _waiting_for_response = false;
 }
 
-String AtlasEc::get(String key) {
-  if (key == String(_electrical_conductivity_key)) {
-    return getElectricalConductvity();
+bool AtlasEc::get_electrical_conductivity(std_msgs::Float32 &msg) {
+  if (_waiting_for_response) {
+    if (millis() - _time_of_last_query > 1000) {
+      _waiting_for_response = false;
+      _time_of_last_reading = millis();
+      if (read_response()) {
+        msg.data = _electrical_conductivity;
+        return true;
+      }
+    }
+    return false;
   }
-}
-
-String AtlasEc::set(String key, String value) {
-  if (key == String(_electrical_conductivity_key)) {
-    return getErrorMessage(_electrical_conductivity_key);
+  else if (millis() - _time_of_last_reading > _min_update_interval){
+    send_query();
   }
+  return false;
 }
 
-String AtlasEc::getElectricalConductvity(){
-  if (millis() - _time_of_last_reading > _min_update_interval){ // can only read sensor so often
-    getData();
-    _time_of_last_reading = millis();
-  }
-  return _electrical_conductivity_message;
-}
-
-void AtlasEc::getData() {
-  boolean is_good_reading = true;
-
-  // Read sensor
-  Wire.beginTransmission(_electrical_conductivity_channel); // read message response state
+void AtlasEc::send_query() {
+  Wire.beginTransmission(_i2c_address); // read message response state
   Wire.print("r");
   Wire.endTransmission();
-  delay(1000);
-  Wire.requestFrom(_electrical_conductivity_channel, 20, 1);
+  _waiting_for_response = true;
+  _time_of_last_query = millis();
+}
+
+bool AtlasEc::read_response() {
+  Wire.requestFrom(_i2c_address, 20, 1);
   byte response = Wire.read();
   String string = Wire.readStringUntil(0);
+  has_error = false;
 
   // Check for failure
   if (response == 255) {
-    is_good_reading = false; // no data
+    error_msg = "No data";
+    has_error = true;
   }
   else if (response == 254) {
-    is_good_reading = false; // request pending
+    error_msg = "Tried to read data before request was processed";
+    has_error = true;
   }
   else if (response == 2) {
-    is_good_reading = false; // request failed
+    error_msg = "Request failed";
+    has_error = true;
   }
   else if (response == 1) { // good reading
-    electrical_conductivity = string.toFloat() / 1000;
+    _electrical_conductivity = string.toFloat() / 1000;
   }
   else {
-    is_good_reading = false; // unknown error
+    error_msg = "Unknown error";
+    has_error = true;
   }
-
-  // Update messages
-  if (is_good_reading) {
-    _electrical_conductivity_message = getMessage(_electrical_conductivity_key, String(electrical_conductivity, 1));
-  }
-  else { // read failure
-    _electrical_conductivity_message = getErrorMessage(_electrical_conductivity_key);
-  }
-}
-
-String AtlasEc::getMessage(String key, String value) {
-  return String(id + "," + key + "," + value);
-}
-
-String AtlasEc::getErrorMessage(String key) {
-  return String(id + "," + key + ",error");
+  return !has_error;
 }
