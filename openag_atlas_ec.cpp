@@ -15,13 +15,13 @@ void AtlasEc::begin() {
   _waiting_for_response = false;
 }
 
-bool AtlasEc::get_electrical_conductivity(std_msgs::Float32 &msg) {
+bool AtlasEc::get_water_electrical_conductivity(std_msgs::Float32 &msg) {
   if (_waiting_for_response) {
     if (millis() - _time_of_last_query > 1000) {
       _waiting_for_response = false;
       _time_of_last_reading = millis();
       if (read_response()) {
-        msg.data = _electrical_conductivity;
+        msg.data = _water_electrical_conductivity;
         return true;
       }
     }
@@ -61,7 +61,7 @@ bool AtlasEc::read_response() {
     has_error = true;
   }
   else if (response == 1) { // good reading
-    _electrical_conductivity = string.toFloat() / 1000;
+    _water_electrical_conductivity = string.toFloat() / 1000;
   }
   else {
     error_msg = "Unknown error";
