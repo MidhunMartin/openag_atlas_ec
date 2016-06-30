@@ -23,11 +23,13 @@ class AtlasEc {
 
     // Public functions
     void begin();
+    void update();
     bool get_water_electrical_conductivity(std_msgs::Float32 &msg);
 
   private:
     // Private variables
     float _water_electrical_conductivity;
+    bool _send_water_electrical_conductivity;
     uint32_t _time_of_last_reading;
     uint32_t _time_of_last_query;
     bool _waiting_for_response;
@@ -36,7 +38,7 @@ class AtlasEc {
 
     // Private functions
     void send_query();
-    bool read_response();
+    void read_response();
 };
 
  #endif

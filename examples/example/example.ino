@@ -10,6 +10,8 @@ void setup() {
 std_msgs::Float32 ec_msg;
 
 void loop() {
+  atlas_ec_1.update();
+
   if (atlas_ec_1.get_water_electrical_conductivity(ec_msg)) {
     Serial.print("Electrical Conductivity: ");
     Serial.println(ec_msg.data);
