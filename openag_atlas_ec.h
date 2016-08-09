@@ -6,20 +6,17 @@
 #define OPENAG_ATLAS_EC_H
 
 #include "Arduino.h"
+#include <openag_module.h>
 #include <Wire.h>
 #include <std_msgs/Float32.h>
 
 /**
  * \brief Electrical conductivity sensor.
  */
-class AtlasEc {
+class AtlasEc : public Module {
   public:
     // Constructor
     AtlasEc(int i2c_address);
-
-    // Public variables
-    bool has_error;
-    char* error_msg;
 
     // Public functions
     void begin();

@@ -1,0 +1,17 @@
+{
+    "description": "Driver for he Atlas Scientific EC sensor",
+    "class_name": "AtlasEc",
+    "header_file": "openag_atlas_ec.h",
+    "arguments": [
+        {
+            "name": "i2c_address",
+            "type": "int",
+            "default": 100
+        }
+    ],
+    "outputs": {
+        "water_electrical_conductivity": {
+            "type": "std_msgs/Float32"
+        }
+    }
+}
