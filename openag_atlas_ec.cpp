@@ -44,25 +44,33 @@ bool AtlasEc::get_water_electrical_conductivity(std_msgs::Float32 &msg) {
 }
 
 void AtlasEc::set_dry_calibration(std_msgs::Empty msg) {
+  Wire.beginTransmission(_i2c_address);
   Wire.print("Cal,dry");
+  Wire.endTransmission();
 }
 
 void AtlasEc::set_single_calibration(std_msgs::Float32 msg) {
   char buf[17];
   sprintf(buf, "Cal,one,%.2f", msg.data);
+  Wire.beginTransmission(_i2c_address);
   Wire.print(buf);
+  Wire.endTransmission();
 }
 
 void AtlasEc::set_lowpoint_calibration(std_msgs::Float32 msg) {
   char buf[17];
   sprintf(buf, "Cal,low,%.2f", msg.data);
+  Wire.beginTransmission(_i2c_address);
   Wire.print(buf);
+  Wire.endTransmission();
 }
 
 void AtlasEc::set_highpoint_calibration(std_msgs::Float32 msg) {
   char buf[17];
   sprintf(buf, "Cal,high,%.2f", msg.data);
+  Wire.beginTransmission(_i2c_address);
   Wire.print(buf);
+  Wire.endTransmission();
 }
 
 void AtlasEc::send_query() {
