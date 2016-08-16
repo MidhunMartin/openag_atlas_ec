@@ -1,5 +1,5 @@
 {
-    "description": "Driver for he Atlas Scientific EC sensor",
+    "description": "Driver for the Atlas Scientific EC sensor",
     "class_name": "AtlasEc",
     "header_file": "openag_atlas_ec.h",
     "arguments": [
@@ -9,6 +9,24 @@
             "default": 100
         }
     ],
+    "inputs": {
+        "dry_calibration": {
+            "type": "std_msgs/Empty",
+            "categories": ["calibration"]
+        },
+        "single_calibration": {
+            "type": "std_msgs/Float32",
+            "categories": ["calibration"]
+        },
+        "lowpoint_calibration": {
+            "type": "std_msgs/Float32",
+            "categories": ["calibration"]
+        },
+        "highpoint_calibration": {
+            "type": "std_msgs/Float32",
+            "categories": ["calibration"]
+        }
+    },
     "outputs": {
         "water_electrical_conductivity": {
             "type": "std_msgs/Float32"

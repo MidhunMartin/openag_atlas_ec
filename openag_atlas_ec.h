@@ -8,6 +8,7 @@
 #include "Arduino.h"
 #include <openag_module.h>
 #include <Wire.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
 
 /**
@@ -22,6 +23,10 @@ class AtlasEc : public Module {
     void begin();
     void update();
     bool get_water_electrical_conductivity(std_msgs::Float32 &msg);
+    void set_dry_calibration(std_msgs::Empty msg);
+    void set_single_calibration(std_msgs::Float32 msg);
+    void set_lowpoint_calibration(std_msgs::Float32 msg);
+    void set_highpoint_calibration(std_msgs::Float32 msg);
 
   private:
     // Private variables
