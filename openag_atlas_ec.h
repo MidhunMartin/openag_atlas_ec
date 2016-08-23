@@ -32,10 +32,9 @@ class AtlasEc : public Module {
     // Private variables
     float _water_electrical_conductivity;
     bool _send_water_electrical_conductivity;
-    uint32_t _time_of_last_reading;
     uint32_t _time_of_last_query;
     bool _waiting_for_response;
-    const static uint32_t _min_update_interval = 2000;
+    const static uint32_t _min_update_interval = 3000;
     int _i2c_address;
 
     // Private functions
