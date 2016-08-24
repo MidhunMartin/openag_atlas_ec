@@ -24,7 +24,9 @@ void AtlasEc::begin() {
 
 void AtlasEc::update() {
   if (_waiting_for_response) {
-    read_response();
+    if (millis() - _time_of_last_query > 1400) {
+      read_response();
+    }
   }
   else if (millis() - _time_of_last_query > _min_update_interval) {
     send_query();
@@ -69,11 +71,11 @@ void AtlasEc::set_highpoint_calibration(std_msgs::Float32 msg) {
 }
 
 void AtlasEc::send_query() {
+  _time_of_last_query = millis();
   Wire.beginTransmission(_i2c_address); // read message response state
   Wire.print("r");
   Wire.endTransmission();
   _waiting_for_response = true;
-  _time_of_last_query = millis();
 }
 
 void AtlasEc::read_response() {
